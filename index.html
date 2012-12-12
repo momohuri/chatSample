@@ -1,0 +1,155 @@
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8"/> 
+        <title>Chat</title>
+        <script src="/socket.io/socket.io.js"></script>
+        <script>
+            var console = document.getElementById("console");
+            var socket;
+
+            function send() {
+                parent.postMessage('babou', '*');
+            }
+            function parentExists() {
+                return (parent.location == window.location) ? false : true;
+            }
+          
+
+            function initPage() {
+                if (parentExists()) {
+                    send();
+                }
+
+                socket = io.connect(document.URL);
+                socket.on('socketOk', function (data) {
+                    Log("Debug:Socket connected");
+
+                });
+                console = document.getElementById("console");
+                socket.on('new-user', function (data) {
+                    Log("nouveau user : " + data.text);
+
+                });
+
+                socket.on('new-message', function (data) {
+                    Log(data.nickname + " :" + data.text);
+                });
+
+                socket.on('user-leave', function (data) {
+
+                    Log('user leave :' + data)
+
+                });
+
+                
+
+
+                var nickform = document.getElementById("nick-form");
+                var messageform = document.getElementById("message-form");
+
+                nickform.onsubmit = function (e) {
+                    var Username = document.getElementById("login-Username").value;
+                    socket.emit('login/connect', Username, function (success) {
+                        if (success) {
+                            document.getElementById('nickname').style.display = 'none';
+                            document.getElementById('message').style.display = 'block';
+                        }
+                        if (!success) {
+
+                        }
+                    });
+                    document.getElementById("message-text").focus();
+                    e.preventDefault();
+                };
+
+                messageform.onsubmit = function (e) {
+                    var message = document.getElementById("message-text");
+                    if (message.value != '') {
+                        socket.emit('message', message.value);
+                        message.value = '';
+                    }
+                    e.preventDefault();
+                    message.focus();
+                };
+
+
+                if (parentExists()) {
+                    function Log(data) {
+                        send(data);
+                    }
+                }
+                else {
+                    function Log(data) {
+                        console.innerHTML = data + "<br />" + console.innerHTML;
+                    }
+                }
+                
+                var height = window.innerHeight;
+                height -= 200;
+                
+                document.body.style.height = height+ "px";
+                document.getElementById('console').innerHTML = document.body.style.height;
+
+
+
+                window.addEventListener("message", receiveMessage, false);
+                function receiveMessage(event) {
+                    switch (event.data.method) {
+                        case 'pan':
+                            var dx = event.data.args.x;
+                            var dy = event.data.args.y;
+                            var pos = map.tryPixelToLocation(new Microsoft.Maps.Point(map.getWidth()/2 + dx, map.getHeight()/2 + dy, Microsoft.Maps.PixelReference.viewport));
+                            map.setView({ center: pos });
+                            break;
+ 
+                        case 'zoomin':
+                            var currentZoom = map.getZoom();
+                            map.setView({ zoom: currentZoom + 1 });
+                            break;
+ 
+                        case 'zoomout':
+                            var currentZoom = map.getZoom();
+                            map.setView({ zoom: currentZoom - 1 });
+                            break;
+                    }
+                }
+                
+            }
+            window.onload = initPage;
+         
+        </script>
+ 
+        <style type="text/css">
+            #console{overflow:hidden; 
+                        background-color: burlywood; 
+                        color: crimson;
+                        height: 100%;
+                        position: relative;
+            }
+            #message {  display: none;  }
+            body,html { height: 100%;
+                        position: relative;
+               background-color: #808080; 
+            }
+        </style>
+    </head>
+    <body>
+        
+
+	    <form id="nick-form">
+            <fieldset id="nickname">
+                <legend>Nickname:</legend>
+                <input id="login-Username" type="text"/>
+                <input type="submit" onClick="" value="Log In" />
+            </fieldset>
+        </form>
+        <form id="message-form">
+             <fieldset id="message">
+                <legend>message:</legend>
+                <input id="message-text" type="text"/>
+                <input type="submit" value="Send Message" />
+            </fieldset>
+        </form>
+        <div id="console" ></div>
+    </body>
+</html>
