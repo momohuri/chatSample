@@ -7,19 +7,6 @@
             var console = document.getElementById("console");
             var socket;
 
-            function send() {
-                parent.postMessage('babou', '*');
-            }
-            function parentExists() {
-                return (parent.location == window.location) ? false : true;
-            }
-          
-
-            function initPage() {
-                if (parentExists()) {
-                    send();
-                }
-
                 socket = io.connect(document.URL);
                 socket.on('socketOk', function (data) {
                     Log("Debug:Socket connected");
